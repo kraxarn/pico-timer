@@ -23,6 +23,14 @@ void button_init(const uint gpio)
 	gpio_pull_down(gpio);
 }
 
+unsigned char dip_value()
+{
+	return (gpio_get(DIP1_PIN) ? 1 : 0)
+		| (gpio_get(DIP2_PIN) ? 2 : 0)
+		| (gpio_get(DIP3_PIN) ? 4 : 0)
+		| (gpio_get(DIP4_PIN) ? 8 : 0);
+}
+
 void pico_set_led(const bool led_on)
 {
 	gpio_put(PICO_DEFAULT_LED_PIN, led_on);
@@ -50,8 +58,8 @@ int main()
 		const bool dip3_value = gpio_get(DIP3_PIN);
 		const bool dip4_value = gpio_get(DIP4_PIN);
 
-		printf("btn0=%d dip1=%d dip2=%d dip3=%d dip4=%d\n", button_value,
-			dip1_value, dip2_value, dip3_value, dip4_value);
+		printf("btn0=%d dip1=%d dip2=%d dip3=%d dip4=%d dip=%d\n", button_value,
+			dip1_value, dip2_value, dip3_value, dip4_value, dip_value());
 
 		sleep_ms(LED_DELAY_MS);
 	}

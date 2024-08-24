@@ -5,7 +5,7 @@
 
 #include "ssd1306.h"
 
-#define LED_DELAY_MS 1
+#define LED_DELAY_MS 3000
 
 #define BUTTON_PIN 15
 
@@ -13,6 +13,8 @@
 #define DIP2_PIN 12
 #define DIP3_PIN 13
 #define DIP4_PIN 14
+
+alarm_id_t current_timer = -1;
 
 void pico_led_init()
 {
@@ -46,6 +48,7 @@ unsigned char dip_value()
 
 void pico_set_led(const bool led_on)
 {
+	printf("LED: %d\n", led_on);
 	gpio_put(PICO_DEFAULT_LED_PIN, led_on);
 }
 
@@ -57,6 +60,67 @@ void lcd_send_cmd(const uint8_t cmd)
 	};
 
 	i2c_write_blocking(i2c_default, SSD1306_I2C_ADDR, buf, 2, false);
+}
+
+void display_current_timeout()
+{
+	for (int i = 0; i < dip_value(); i++)
+	{
+		pico_set_led(true);
+		sleep_ms(100);
+		pico_set_led(false);
+		sleep_ms(100);
+	}
+
+	sleep_ms(LED_DELAY_MS);
+}
+
+int64_t timer_callback(const alarm_id_t id, void *user_data)
+{
+	printf("Timer %d elapsed\n", id);
+
+	*(alarm_id_t *)user_data = -1;
+	return 0;
+}
+
+void start_timer()
+{
+	const int minutes = dip_value();
+	const uint32_t milliseconds = minutes * 60 * 1000;
+	printf("Starting timer for %d minute(s) (%d ms)\n", minutes, milliseconds);
+
+	pico_set_led(true);
+	sleep_ms(2000);
+	pico_set_led(false);
+
+	current_timer = add_alarm_in_ms(milliseconds, timer_callback, &current_timer, false);
+}
+
+bool is_timer_running()
+{
+	return current_timer >= 0;
+}
+
+void run_timer()
+{
+	if (!gpio_get(BUTTON_PIN))
+	{
+		return;
+	}
+
+	printf("Cancelling timer %d\n", current_timer);
+
+	cancel_alarm(current_timer);
+	current_timer = -1;
+
+	pico_set_led(true);
+
+	while (gpio_get(BUTTON_PIN))
+	{
+		sleep_ms(10);
+	}
+
+	pico_set_led(false);
 }
 
 int main()
@@ -72,19 +136,22 @@ int main()
 	button_init(DIP3_PIN);
 	button_init(DIP4_PIN);
 
+	printf("Ready!");
+
 	while (true)
 	{
-		const bool button_value = gpio_get(BUTTON_PIN);
-		pico_set_led(button_value);
+		if (is_timer_running())
+		{
+			run_timer();
+		}
+		else
+		{
+			display_current_timeout();
+		}
 
-		const bool dip1_value = gpio_get(DIP1_PIN);
-		const bool dip2_value = gpio_get(DIP2_PIN);
-		const bool dip3_value = gpio_get(DIP3_PIN);
-		const bool dip4_value = gpio_get(DIP4_PIN);
-
-		printf("btn0=%d dip1=%d dip2=%d dip3=%d dip4=%d dip=%d\n", button_value,
-			dip1_value, dip2_value, dip3_value, dip4_value, dip_value());
-
-		sleep_ms(LED_DELAY_MS);
+		if (!is_timer_running() && gpio_get(BUTTON_PIN))
+		{
+			start_timer();
+		}
 	}
 }

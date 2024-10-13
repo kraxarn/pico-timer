@@ -29,15 +29,6 @@ void button_init(const uint gpio)
 	gpio_pull_down(gpio);
 }
 
-void lcd_init()
-{
-	i2c_init(i2c_default, 100 * 1000);
-	gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
-	gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
-	gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
-	gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
-}
-
 unsigned char dip_value()
 {
 	return (gpio_get(DIP1_PIN) ? 1 : 0)
@@ -50,16 +41,6 @@ void pico_set_led(const bool led_on)
 {
 	printf("LED: %d\n", led_on);
 	gpio_put(PICO_DEFAULT_LED_PIN, led_on);
-}
-
-void lcd_send_cmd(const uint8_t cmd)
-{
-	const uint8_t buf[2] = {
-		0x80,
-		cmd,
-	};
-
-	i2c_write_blocking(i2c_default, SSD1306_I2C_ADDR, buf, 2, false);
 }
 
 void display_current_timeout()

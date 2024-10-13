@@ -1,9 +1,23 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "hardware/i2c.h"
 #include "pico/stdlib.h"
 
 #include "ssd1306.h"
+#include "xpm.h"
+#include "img/colon.xpm"
+#include "img/num0.xpm"
+#include "img/num1.xpm"
+#include "img/num2.xpm"
+#include "img/num3.xpm"
+#include "img/num4.xpm"
+#include "img/num5.xpm"
+#include "img/num6.xpm"
+#include "img/num7.xpm"
+#include "img/num8.xpm"
+#include "img/num9.xpm"
+#include "img/space.xpm"
 
 #define LED_DELAY_MS 3000
 
@@ -104,18 +118,76 @@ void run_timer()
 	pico_set_led(false);
 }
 
+void draw_time(uint8_t *buffer, const uint8_t x, const uint8_t y, const uint32_t time)
+{
+	char **numbers[10] = {
+		num0,
+		num1,
+		num2,
+		num3,
+		num4,
+		num5,
+		num6,
+		num7,
+		num8,
+		num9,
+	};
+
+	const uint32_t total_seconds = time / 1000;
+	const uint32_t minutes = total_seconds / 60;
+	const uint32_t seconds = total_seconds % 60;
+
+	xpm_draw(numbers[minutes / 10], buffer, x + 16 * 0 + 8 * 0, y);
+	xpm_draw(numbers[minutes % 10], buffer, x + 16 * 1 + 8 * 1, y);
+
+	char **seperator = time % 1000 == 0 ? space : colon;
+	xpm_draw(seperator, buffer, x + 16 * 2 + 8 * 1, y);
+
+	xpm_draw(numbers[seconds / 10], buffer, x + 16 * 3 + 8 * 1, y);
+	xpm_draw(numbers[seconds % 10], buffer, x + 16 * 4 + 8 * 2, y);
+}
+
 int main()
 {
 	stdio_usb_init();
 
-	pico_led_init();
-	// lcd_init();
+	ssd1306_init_i2c();
+	ssd1306_init();
+
+	// Wait for LCD to initialize
+	sleep_ms(2000);
 
 	button_init(BUTTON_PIN);
 	button_init(DIP1_PIN);
 	button_init(DIP2_PIN);
 	button_init(DIP3_PIN);
 	button_init(DIP4_PIN);
+
+	struct render_area area = {
+		.start_col = 0,
+		.end_col = SSD1306_WIDTH - 1,
+		.start_page = 0,
+		.end_page = SSD1306_NUM_PAGES - 1,
+	};
+
+	area.buffer_size = ssd1306_buffer_size(&area);
+
+	uint8_t buffer[SSD1306_BUF_LEN] = {0};
+	ssd1306_render(buffer, &area);
+
+	uint32_t time = 99 * 60 * 1000;
+
+	while (1)
+	{
+		if (time % 500 == 0)
+		{
+			draw_time(buffer, 16, 0, time);
+			ssd1306_render(buffer, &area);
+		}
+
+		time--;
+		sleep_ms(1);
+	}
 
 	printf("Ready!");
 

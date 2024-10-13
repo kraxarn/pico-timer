@@ -10,7 +10,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
 
-add_executable(${CMAKE_PROJECT_NAME} main.c ssd1306.c)
+add_executable(${CMAKE_PROJECT_NAME}
+	main.c
+	ssd1306.c
+	xpm.c
+)
 
 # Enable USB serial output
 pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 1)

@@ -197,7 +197,7 @@ int main()
 	{
 		if (time % 500 == 0)
 		{
-			draw_time(buffer, 16, 0, time);
+			draw_time(buffer, 16, 16, time, ORIENTATION_HORIZONTAL);
 			ssd1306_render(buffer, &area);
 		}
 

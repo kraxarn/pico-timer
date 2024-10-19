@@ -49,16 +49,23 @@ void xpm_parse_colors(const struct xpm_values *values, char **data, struct xpm_c
 	}
 }
 
-int xpm_draw(char **data, uint8_t *buffer, const uint8_t x, const uint8_t y)
+enum xpm_status xpm_draw(char **data, uint8_t *buffer, const uint8_t x, const uint8_t y)
 {
 	const struct xpm_values values = xpm_parse_values(data[0]);
 
-	if (values.columns > SSD1306_WIDTH
-		|| values.rows > SSD1306_HEIGHT
-		|| values.colors > 2
-		|| values.chars_per_pixel > 1)
+	if (values.columns + x > SSD1306_WIDTH || values.rows + y > SSD1306_HEIGHT)
 	{
-		return 0;
+		return XPM_TOO_LARGE;
+	}
+
+	if (values.colors > 2)
+	{
+		return XPM_TOO_MANY_COLORS;
+	}
+
+	if (values.chars_per_pixel > 1)
+	{
+		return XPM_TOO_MANY_CHARS_PER_PIXELS;
 	}
 
 	struct xpm_color colors[2] = {0};
@@ -83,5 +90,25 @@ int xpm_draw(char **data, uint8_t *buffer, const uint8_t x, const uint8_t y)
 		}
 	}
 
-	return 1;
+	return XPM_OK;
+}
+
+const char *xpm_status_to_string(const enum xpm_status status)
+{
+	switch (status)
+	{
+		case XPM_OK:
+			return "ok";
+
+		case XPM_TOO_LARGE:
+			return "too large";
+
+		case XPM_TOO_MANY_COLORS:
+			return "too many colors";
+
+		case XPM_TOO_MANY_CHARS_PER_PIXELS:
+			return "too many chars per pixel";
+	}
+
+	return "unknown status";
 }

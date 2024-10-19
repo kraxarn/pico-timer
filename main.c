@@ -4,6 +4,7 @@
 #include "hardware/i2c.h"
 #include "pico/stdlib.h"
 
+#include "orientation.h"
 #include "ssd1306.h"
 #include "xpm.h"
 #include "img/colon.xpm"
@@ -118,7 +119,8 @@ void run_timer()
 	pico_set_led(false);
 }
 
-void draw_time(uint8_t *buffer, const uint8_t x, const uint8_t y, const uint32_t time)
+void draw_time(uint8_t *buffer, const uint8_t x, const uint8_t y,
+	const uint32_t time, const enum orientation orientation)
 {
 	char **numbers[10] = {
 		num0,
@@ -137,14 +139,28 @@ void draw_time(uint8_t *buffer, const uint8_t x, const uint8_t y, const uint32_t
 	const uint32_t minutes = total_seconds / 60;
 	const uint32_t seconds = total_seconds % 60;
 
-	xpm_draw(numbers[minutes / 10], buffer, x + 16 * 0 + 8 * 0, y);
-	xpm_draw(numbers[minutes % 10], buffer, x + 16 * 1 + 8 * 1, y);
+	if (orientation == ORIENTATION_HORIZONTAL)
+	{
+		xpm_draw(numbers[minutes / 10], buffer, x + 16 * 0 + 8 * 0, y);
+		xpm_draw(numbers[minutes % 10], buffer, x + 16 * 1 + 8 * 1, y);
 
-	char **seperator = time % 1000 == 0 ? space : colon;
-	xpm_draw(seperator, buffer, x + 16 * 2 + 8 * 1, y);
+		char **seperator = time % 1000 == 0 ? space : colon;
+		xpm_draw(seperator, buffer, x + 16 * 2 + 8 * 1, y);
 
-	xpm_draw(numbers[seconds / 10], buffer, x + 16 * 3 + 8 * 1, y);
-	xpm_draw(numbers[seconds % 10], buffer, x + 16 * 4 + 8 * 2, y);
+		xpm_draw(numbers[seconds / 10], buffer, x + 16 * 3 + 8 * 1, y);
+		xpm_draw(numbers[seconds % 10], buffer, x + 16 * 4 + 8 * 2, y);
+	}
+	else if (orientation == ORIENTATION_VERTICAL)
+	{
+		const uint8_t x1 = x + 16 * 0 + 8 * 0;
+		const uint8_t x2 = x + 16 * 1 + 8 * 1;
+
+		xpm_draw(numbers[minutes / 10], buffer, x1, y);
+		xpm_draw(numbers[minutes % 10], buffer, x2, y);
+
+		xpm_draw(numbers[seconds / 10], buffer, x1, y + 32);
+		xpm_draw(numbers[seconds % 10], buffer, x2, y + 32);
+	}
 }
 
 int main()

@@ -170,7 +170,7 @@ int main()
 	ssd1306_init_i2c();
 
 	// Wait for LCD to initialize
-	sleep_ms(2000);
+	sleep_ms(500);
 
 	ssd1306_init();
 

@@ -2,10 +2,11 @@
 magick \
 	-background black \
 	-fill white \
-	-font "Micro_Chat_Monospaced.ttf" \
-	-pointsize 16 \
+	-font "Kaph-Regular.ttf" \
+	-pointsize 20 \
 	-size 16x32 \
 	+antialias \
 	-depth 1 \
+	-gravity center \
 	label:$1 \
 	"$2"

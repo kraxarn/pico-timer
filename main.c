@@ -7,6 +7,7 @@
 #include "orientation.h"
 #include "ssd1306.h"
 #include "xpm.h"
+#include "img/border.xpm"
 #include "img/colon.xpm"
 #include "img/num0.xpm"
 #include "img/num1.xpm"
@@ -192,6 +193,8 @@ int main()
 	ssd1306_render(buffer, &area);
 
 	uint32_t time = 99 * 60 * 1000;
+
+	xpm_draw(border, buffer, 0, 0);
 
 	while (1)
 	{

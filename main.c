@@ -150,12 +150,12 @@ void draw_time(uint8_t *buffer, const uint8_t x, const uint8_t y, const uint32_t
 int main()
 {
 	stdio_usb_init();
-
 	ssd1306_init_i2c();
-	ssd1306_init();
 
 	// Wait for LCD to initialize
 	sleep_ms(2000);
+
+	ssd1306_init();
 
 	button_init(BUTTON_PIN);
 	button_init(DIP1_PIN);
